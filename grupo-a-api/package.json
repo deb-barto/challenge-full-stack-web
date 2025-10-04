@@ -1,0 +1,42 @@
+{
+  "name": "grupo-a-api",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "lint": "eslint . --ext .ts",
+    "test": "vitest run",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:push": "prisma db push",
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10",
+    "@fastify/helmet": "^12",
+    "@fastify/jwt": "^9.1.0",
+    "@fastify/rate-limit": "^10",
+    "@prisma/client": "^5",
+    "argon2": "^0.40.1",
+    "dotenv": "^16",
+    "fastify": "^5",
+    "fastify-plugin": "^5",
+    "pino": "^9",
+    "pino-pretty": "^11",
+    "prisma": "^5",
+    "zod": "^3"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@typescript-eslint/eslint-plugin": "^8",
+    "@typescript-eslint/parser": "^8",
+    "eslint": "^9",
+    "eslint-config-prettier": "^9",
+    "supertest": "^7",
+    "tsx": "^4",
+    "typescript": "^5",
+    "vitest": "^2"
+  }
+}

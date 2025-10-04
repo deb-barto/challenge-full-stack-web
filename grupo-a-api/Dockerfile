@@ -1,0 +1,27 @@
+FROM node:20-bookworm-slim AS deps
+RUN apt-get update -y && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+
+FROM node:20-bookworm-slim AS build
+RUN apt-get update -y && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY package*.json ./
+COPY --from=deps /app/node_modules ./node_modules
+COPY tsconfig.json ./
+COPY prisma ./prisma
+COPY src ./src
+RUN npx prisma generate
+RUN npm run build
+
+FROM node:20-bookworm-slim
+RUN apt-get update -y && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package*.json ./
+COPY --from=deps  /app/node_modules ./node_modules
+COPY --from=build /app/dist        ./dist
+COPY --from=build /app/prisma      ./prisma
+EXPOSE 3001
+CMD ["node","dist/server.js"]

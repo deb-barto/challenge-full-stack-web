@@ -1,0 +1,21 @@
+import { FastifyInstance } from 'fastify';
+import { loginSchema } from './auth.schemas';
+import { doLogin } from './auth.service';
+
+export default async function routes(app: FastifyInstance){
+  app.post('/auth/login', async (req, rep) => {
+    const { email, password } = loginSchema.parse(req.body);
+    const tokens = await doLogin(app, email, password);
+    if (!tokens) return rep.code(401).send({ error: 'invalid credentials' });
+    return tokens;
+  });
+
+  app.post('/auth/refresh', async (req, rep) => {
+    try {
+      const payload = await req.jwtVerify<{ sub: string; typ?: string }>();
+      if (payload.typ !== 'refresh') throw new Error();
+      const access = app.jwt.sign({ sub: payload.sub, role: 'ADMIN' }, { expiresIn: app.config.JWT_EXPIRES });
+      return { access };
+    } catch { return rep.code(401).send({ error: 'invalid refresh token' }); }
+  });
+}
