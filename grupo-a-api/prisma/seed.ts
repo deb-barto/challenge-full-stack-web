@@ -1,16 +1,28 @@
-import { PrismaClient } from '@prisma/client';
-import { hash } from 'argon2';
-const prisma = new PrismaClient();
+/// <reference types="node" />
+import { PrismaClient } from '@prisma/client'
+import { hash } from 'argon2'
+
+const prisma = new PrismaClient()
 
 async function main() {
-  const adminEmail = 'admin@demo.local';
-  const pass = await hash('admin123');
+  const email = 'admin@demo.local'
+  const password = await hash('admin123')
+
   await prisma.admin.upsert({
-    where: { email: adminEmail },
-    update: {},
-    create: { email: adminEmail, password: pass }
-  });
-  console.log('seed ok:', adminEmail, '/ admin123');
+    where: { email },
+    update: {},                     
+    create: { email, password },     
+  })
+
+  console.log(`[seed] admin pronto: ${email} / admin123`)
 }
 
-main().finally(()=>prisma.$disconnect());
+main()
+  .catch((err) => {
+    console.error('[seed] erro:', err)
+    // não propaga erro pra não derrubar o container quando o entrypoint roda sempre
+    process.exit(0)
+  })
+  .finally(async () => {
+    await prisma.$disconnect()
+  })
