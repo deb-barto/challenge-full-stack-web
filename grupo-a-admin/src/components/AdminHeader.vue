@@ -15,7 +15,7 @@ async function logout() {
   <v-app-bar flat class="admin-header">
     <div class="admin-header__brand">
       <v-icon icon="mdi-school" size="32" class="admin-header__logo" />
-      <span class="admin-header__title">grupo a painel</span>
+      <span class="admin-header__title">Grupo A </span>
     </div>
 
     <v-spacer />
