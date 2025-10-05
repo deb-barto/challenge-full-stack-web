@@ -12,6 +12,8 @@ const props = defineProps<{
   nameTouched: boolean
   emailTouched: boolean
   disabled?: boolean
+  nameChecking?: boolean
+  emailChecking?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -49,6 +51,7 @@ const courseNames = computed(() => props.student.enrollments.map((enrollment) =>
           :error="nameTouched && !!nameError"
           :error-messages="nameTouched && nameError ? [nameError] : []"
           :disabled="disabled"
+          :loading="nameChecking"
           @update:model-value="(value) => emit('update:name', value)"
           @blur="emit('blur-name')"
         />
@@ -87,6 +90,7 @@ const courseNames = computed(() => props.student.enrollments.map((enrollment) =>
               :error="emailTouched && !!emailError"
               :error-messages="emailTouched && emailError ? [emailError] : []"
               :disabled="disabled"
+              :loading="emailChecking"
               @update:model-value="(value) => emit('update:email', value)"
               @blur="emit('blur-email')"
             />

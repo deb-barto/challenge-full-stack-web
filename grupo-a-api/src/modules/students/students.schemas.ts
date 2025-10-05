@@ -20,7 +20,19 @@ export const studentUpdate = studentCreate.partial().extend({
   courseIds: z.array(z.string().cuid()).optional(),
 });
 
+export const studentUniqueNameQuery = z.object({
+  name: z.string().trim().min(2).max(120),
+  ignoreId: z.string().cuid().optional(),
+});
+
+export const studentUniqueEmailQuery = z.object({
+  email: z.string().trim().email().max(140),
+  ignoreId: z.string().cuid().optional(),
+});
+
 export type StudentQuery = z.infer<typeof studentQuery>;
 export type StudentCreate = z.infer<typeof studentCreate>;
 export type StudentUpdate = z.infer<typeof studentUpdate>;
+export type StudentUniqueNameQuery = z.infer<typeof studentUniqueNameQuery>;
+export type StudentUniqueEmailQuery = z.infer<typeof studentUniqueEmailQuery>;
 

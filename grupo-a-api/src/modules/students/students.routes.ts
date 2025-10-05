@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { Prisma } from '@prisma/client';
 import { authGuard } from '../../middleware/authGuard';
-import { studentCreate, studentQuery, studentUpdate } from './students.schemas';
+import { studentCreate, studentQuery, studentUpdate, studentUniqueEmailQuery, studentUniqueNameQuery } from './students.schemas';
 import { HttpError } from '../../utils/httpErrors';
 
 export default async function routes(app: FastifyInstance){
@@ -134,6 +134,30 @@ export default async function routes(app: FastifyInstance){
     const { id } = req.params as { id: string };
     await app.prisma.student.delete({ where: { id } });
     return rep.code(204).send();
+  });
+
+  app.get('/students/check-name', { preHandler: authGuard }, async (req) => {
+    const { name, ignoreId } = studentUniqueNameQuery.parse(req.query);
+    const exists = await app.prisma.student.findFirst({
+      where: {
+        name: { equals: name, mode: 'insensitive' },
+        NOT: ignoreId ? { id: ignoreId } : undefined,
+      },
+      select: { id: true },
+    });
+    return { exists: !!exists };
+  });
+
+  app.get('/students/check-email', { preHandler: authGuard }, async (req) => {
+    const { email, ignoreId } = studentUniqueEmailQuery.parse(req.query);
+    const exists = await app.prisma.student.findFirst({
+      where: {
+        email: { equals: email, mode: 'insensitive' },
+        NOT: ignoreId ? { id: ignoreId } : undefined,
+      },
+      select: { id: true },
+    });
+    return { exists: !!exists };
   });
 }
 

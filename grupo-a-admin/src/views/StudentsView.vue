@@ -14,6 +14,7 @@ const search = ref('')
 const createDialog = ref(false)
 const initialError = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
+const actionsSlotName = 'item.actions' as const
 
 const headers = computed(() => ([
   { title: 'Nome', value: 'name' },
@@ -40,17 +41,8 @@ async function handleSearch() {
   await store.fetch(1, store.limit, search.value || undefined)
 }
 
-async function changePage(page: number) {
-  console.debug('[StudentsView] changePage', { page })
-  await store.fetch(page, store.limit, search.value || undefined)
-}
-
 function openCreateModal() {
   createDialog.value = true
-}
-
-function handleCreated() {
-  createDialog.value = false
 }
 
 function goToDetail(id: string) {
@@ -129,7 +121,7 @@ function handleStudentCreated(student: Student) {
                       class="students__table"
                       item-value="id"
                     >
-                      <template #item.actions="{ item }">
+                      <template v-slot:[actionsSlotName]="{ item }">
                         <v-btn
                           variant="text"
                           color="primary"
@@ -144,7 +136,7 @@ function handleStudentCreated(student: Student) {
                         <v-pagination
                           :length="store.pages"
                           v-model="store.page"
-                          @update:model-value="changePage"
+                          @update:model-value="(page) => store.fetch(page, store.limit, search.value || undefined)"
                         />
                       </template>
                     </v-data-table>

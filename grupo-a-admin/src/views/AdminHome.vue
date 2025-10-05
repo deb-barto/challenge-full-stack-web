@@ -11,7 +11,6 @@ store.loadSession()
 
 const profile = computed(() => store.profile)
 const username = computed(() => profile.value?.username ?? 'unknown')
-const email = computed(() => profile.value?.email ?? '')
 
 if (!store.isAuthenticated) {
   router.replace({ name: 'login' })

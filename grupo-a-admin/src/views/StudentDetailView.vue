@@ -21,6 +21,14 @@ const updateError = ref<string | null>(null)
 const updateSuccess = ref<string | null>(null)
 const updating = ref(false)
 const editing = ref(false)
+const checkingName = ref(false)
+const checkingEmail = ref(false)
+const nameExistsError = ref<string | null>(null)
+const emailExistsError = ref<string | null>(null)
+let nameCheckTimeout: ReturnType<typeof setTimeout> | undefined
+let emailCheckTimeout: ReturnType<typeof setTimeout> | undefined
+let nameCheckId = 0
+let emailCheckId = 0
 
 const editForm = reactive({
   name: '',
@@ -65,7 +73,77 @@ watch(student, (value) => {
   touched.name = false
   touched.email = false
   editing.value = false
+  nameExistsError.value = null
+  emailExistsError.value = null
+  if (nameCheckTimeout) {
+    clearTimeout(nameCheckTimeout)
+    nameCheckTimeout = undefined
+  }
+  if (emailCheckTimeout) {
+    clearTimeout(emailCheckTimeout)
+    emailCheckTimeout = undefined
+  }
+  checkingName.value = false
+  checkingEmail.value = false
+  nameCheckId += 1
+  emailCheckId += 1
 })
+
+watch(() => editForm.name, (value) => {
+  if (!editing.value) return
+  if (nameCheckTimeout) {
+    clearTimeout(nameCheckTimeout)
+    nameCheckTimeout = undefined
+  }
+  nameExistsError.value = null
+  checkingName.value = false
+  if (!student.value) return
+  const trimmed = value.trim()
+  if (!trimmed) {
+    nameCheckId += 1
+    return
+  }
+  if (trimmed.toLowerCase() === student.value.name.trim().toLowerCase()) {
+    nameCheckId += 1
+    return
+  }
+  if (baseNameError.value) {
+    nameCheckId += 1
+    return
+  }
+  nameCheckTimeout = setTimeout(() => {
+    nameCheckTimeout = undefined
+    void checkNameUniqueness(value)
+  }, 400)
+}, { flush: 'post' })
+
+watch(() => editForm.email, (value) => {
+  if (!editing.value) return
+  if (emailCheckTimeout) {
+    clearTimeout(emailCheckTimeout)
+    emailCheckTimeout = undefined
+  }
+  emailExistsError.value = null
+  checkingEmail.value = false
+  if (!student.value) return
+  const trimmed = value.trim()
+  if (!trimmed) {
+    emailCheckId += 1
+    return
+  }
+  if ((student.value.email ?? '').trim().toLowerCase() === trimmed.toLowerCase()) {
+    emailCheckId += 1
+    return
+  }
+  if (baseEmailError.value) {
+    emailCheckId += 1
+    return
+  }
+  emailCheckTimeout = setTimeout(() => {
+    emailCheckTimeout = undefined
+    void checkEmailUniqueness(value)
+  }, 400)
+}, { flush: 'post' })
 
 function goBack() {
   router.push({ name: 'students' })
@@ -97,19 +175,78 @@ async function confirmDelete() {
 
 const isLoading = computed(() => store.loading && !student.value)
 
-const nameError = computed(() => {
+const baseNameError = computed(() => {
   const value = editForm.name.trim()
   if (!value) return 'Informe o nome completo'
   if (value.split(/\s+/).filter(Boolean).length < 2) return 'Informe nome e sobrenome'
   return null
 })
 
-const emailError = computed(() => {
+const baseEmailError = computed(() => {
   const value = editForm.email.trim()
   if (!value) return null
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) return 'E-mail inválido'
   return null
 })
+
+async function checkNameUniqueness(initialValue?: string) {
+  if (!student.value) return
+  const currentValue = initialValue ?? editForm.name
+  const value = currentValue.trim()
+  nameExistsError.value = null
+  if (!value || value.toLowerCase() === student.value.name.trim().toLowerCase()) {
+    return
+  }
+  if (baseNameError.value) return
+  const currentCheck = ++nameCheckId
+  checkingName.value = true
+  try {
+    const exists = await store.checkNameExists(value, student.value.id)
+    const latestValue = editForm.name.trim().toLowerCase()
+    if (currentCheck === nameCheckId && exists && latestValue === value.toLowerCase()) {
+      nameExistsError.value = 'Nome já cadastrado'
+    }
+  } catch (error) {
+    console.error('[StudentDetailView] name uniqueness check failed', error)
+  } finally {
+    if (currentCheck === nameCheckId) {
+      checkingName.value = false
+    }
+  }
+}
+
+async function checkEmailUniqueness(initialValue?: string) {
+  if (!student.value) return
+  const currentValue = initialValue ?? editForm.email
+  const value = currentValue.trim()
+  emailExistsError.value = null
+  if (!value) {
+    return
+  }
+  if ((student.value.email ?? '').trim().toLowerCase() === value.toLowerCase()) {
+    return
+  }
+  if (baseEmailError.value) return
+  const currentCheck = ++emailCheckId
+  checkingEmail.value = true
+  try {
+    const exists = await store.checkEmailExists(value, student.value.id)
+    const latestValue = editForm.email.trim().toLowerCase()
+    if (currentCheck === emailCheckId && exists && latestValue === value.toLowerCase()) {
+      emailExistsError.value = 'E-mail já cadastrado'
+    }
+  } catch (error) {
+    console.error('[StudentDetailView] email uniqueness check failed', error)
+  } finally {
+    if (currentCheck === emailCheckId) {
+      checkingEmail.value = false
+    }
+  }
+}
+
+const nameError = computed(() => nameExistsError.value ?? baseNameError.value)
+
+const emailError = computed(() => emailExistsError.value ?? baseEmailError.value)
 
 const isValid = computed(() => !nameError.value && !emailError.value)
 
@@ -124,6 +261,16 @@ function startEdit() {
   updateSuccess.value = null
   touched.name = false
   touched.email = false
+  nameExistsError.value = null
+  emailExistsError.value = null
+  if (nameCheckTimeout) {
+    clearTimeout(nameCheckTimeout)
+    nameCheckTimeout = undefined
+  }
+  if (emailCheckTimeout) {
+    clearTimeout(emailCheckTimeout)
+    emailCheckTimeout = undefined
+  }
 }
 
 function cancelEdit() {
@@ -134,13 +281,43 @@ function cancelEdit() {
   touched.name = false
   touched.email = false
   updateError.value = null
+  nameExistsError.value = null
+  emailExistsError.value = null
+  if (nameCheckTimeout) {
+    clearTimeout(nameCheckTimeout)
+    nameCheckTimeout = undefined
+  }
+  if (emailCheckTimeout) {
+    clearTimeout(emailCheckTimeout)
+    emailCheckTimeout = undefined
+  }
+  checkingName.value = false
+  checkingEmail.value = false
+  nameCheckId += 1
+  emailCheckId += 1
 }
 
-function requestUpdate() {
+async function requestUpdate() {
   if (!student.value) return
   touched.name = true
   touched.email = true
   if (!isValid.value) return
+  if (!baseNameError.value && editForm.name.trim().toLowerCase() !== student.value.name.trim().toLowerCase()) {
+    if (nameCheckTimeout) {
+      clearTimeout(nameCheckTimeout)
+      nameCheckTimeout = undefined
+    }
+    await checkNameUniqueness(editForm.name)
+  }
+  if (!baseEmailError.value && editForm.email.trim()) {
+    if (emailCheckTimeout) {
+      clearTimeout(emailCheckTimeout)
+      emailCheckTimeout = undefined
+    }
+    await checkEmailUniqueness(editForm.email)
+  }
+  if (!isValid.value) return
+  if (nameExistsError.value || emailExistsError.value) return
   editConfirmDialog.value = true
 }
 
@@ -220,6 +397,8 @@ async function confirmUpdate() {
                 :name-touched="touched.name"
                 :email-touched="touched.email"
                 :disabled="updating"
+              :name-checking="checkingName"
+              :email-checking="checkingEmail"
                 @toggle-edit="editing ? cancelEdit() : startEdit()"
                 @update:name="(value: string) => { editForm.name = value }"
                 @update:email="(value: string) => { editForm.email = value }"
@@ -252,15 +431,6 @@ async function confirmUpdate() {
               </v-slide-y-transition>
               <div class="student-detail__actions">
                 <div class="student-detail__actions-group">
-                  <v-btn
-                    color="error"
-                    variant="tonal"
-                    class="student-detail__delete"
-                    @click="openConfirm"
-                  >
-                    <v-icon icon="mdi-trash-can-outline" start />
-                    Excluir aluno
-                  </v-btn>
                   <div class="student-detail__save-wrapper">
                     <v-btn
                       class="student-detail__edit-save"
@@ -271,6 +441,15 @@ async function confirmUpdate() {
                       Salvar alterações
                     </v-btn>
                   </div>
+                  <v-btn
+                    color="error"
+                    variant="tonal"
+                    class="student-detail__delete"
+                    @click="openConfirm"
+                  >
+                    <v-icon icon="mdi-trash-can-outline" start />
+                    Excluir aluno
+                  </v-btn>
                 </div>
               </div>
             </div>
@@ -345,9 +524,6 @@ async function confirmUpdate() {
   &__actions-group {
     display: flex;
     gap: 1rem;
-    width: 100%;
-    justify-content: center;
-    justify-content: space-between;
     align-items: flex-end;
   }
 
@@ -384,10 +560,8 @@ async function confirmUpdate() {
   &__edit-save {
     min-width: 180px;
     letter-spacing: 0.08em;
-    font-weight: 400;
+    font-weight: 600;
     text-transform: none;
-    color: #ffffff;
-    background-color: #451e74;
   }
 
   &__save-wrapper {
@@ -426,10 +600,6 @@ async function confirmUpdate() {
 
     &__edit {
       padding: 1.25rem;
-    }
-
-    &__edit-save {
-      width: 100%;
     }
 
     &__save-wrapper {

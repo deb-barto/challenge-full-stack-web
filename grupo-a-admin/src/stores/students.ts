@@ -12,7 +12,17 @@ type State = {
   loading: boolean
 }
 
-export const useStudentsStore = defineStore('students', {
+type Actions = {
+  fetch(page?: number, limit?: number, search?: string): Promise<void>
+  fetchById(id: string): Promise<Student>
+  create(payload: CreateStudentDTO): Promise<Student>
+  update(id: string, payload: Partial<Pick<Student, 'name' | 'email'>>): Promise<Student>
+  remove(id: string): Promise<void>
+  checkNameExists(name: string, ignoreId?: string): Promise<boolean>
+  checkEmailExists(email: string, ignoreId?: string): Promise<boolean>
+}
+
+export const useStudentsStore = defineStore<'students', State, Record<string, never>, Actions>('students', {
   state: (): State => ({
     items: [],
     current: null,
@@ -23,11 +33,13 @@ export const useStudentsStore = defineStore('students', {
     loading: false,
   }),
   actions: {
-    async fetch(page = 1, limit = this.limit, search?: string) {
+    async fetch(page?: number, limit?: number, search?: string) {
       this.loading = true
-      console.debug('[studentsStore] fetching students', { page, limit, search })
+      const resolvedPage = page ?? 1
+      const resolvedLimit = limit ?? this.limit
+      console.debug('[studentsStore] fetching students', { page: resolvedPage, limit: resolvedLimit, search })
       try {
-        const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+        const params = new URLSearchParams({ page: String(resolvedPage), limit: String(resolvedLimit) })
         if (search) params.set('search', search)
         const { data } = await http.get<StudentsPage>(`/admin/students?${params.toString()}`)
         this.items = data.data
@@ -91,6 +103,34 @@ export const useStudentsStore = defineStore('students', {
         if (this.current?.id === id) this.current = null
       } catch (error) {
         console.error('[studentsStore] delete error', error)
+        throw error
+      }
+    },
+    async checkNameExists(name: string, ignoreId?: string) {
+      const value = name.trim()
+      if (!value) return false
+      console.debug('[studentsStore] checking name uniqueness', { value, ignoreId })
+      try {
+        const params = new URLSearchParams({ name: value })
+        if (ignoreId) params.set('ignoreId', ignoreId)
+        const { data } = await http.get<{ exists: boolean }>(`/admin/students/check-name?${params.toString()}`)
+        return data.exists
+      } catch (error) {
+        console.error('[studentsStore] check name error', error)
+        throw error
+      }
+    },
+    async checkEmailExists(email: string, ignoreId?: string) {
+      const value = email.trim()
+      if (!value) return false
+      console.debug('[studentsStore] checking email uniqueness', { value, ignoreId })
+      try {
+        const params = new URLSearchParams({ email: value })
+        if (ignoreId) params.set('ignoreId', ignoreId)
+        const { data } = await http.get<{ exists: boolean }>(`/admin/students/check-email?${params.toString()}`)
+        return data.exists
+      } catch (error) {
+        console.error('[studentsStore] check email error', error)
         throw error
       }
     },
