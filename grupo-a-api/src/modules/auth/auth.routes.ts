@@ -4,10 +4,10 @@ import { doLogin } from './auth.service';
 
 export default async function routes(app: FastifyInstance){
   app.post('/auth/login', async (req, rep) => {
-    const { email, password } = loginSchema.parse(req.body);
-    const tokens = await doLogin(app, email, password);
-    if (!tokens) return rep.code(401).send({ error: 'invalid credentials' });
-    return tokens;
+    const { username, password } = loginSchema.parse(req.body);
+    const session = await doLogin(app, username, password);
+    if (!session) return rep.code(401).send({ error: 'invalid credentials' });
+    return session;
   });
 
   app.post('/auth/refresh', async (req, rep) => {
