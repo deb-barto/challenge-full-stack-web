@@ -17,7 +17,7 @@ const successMessage = ref<string | null>(null)
 
 const headers = computed(() => ([
   { title: 'Nome', value: 'name' },
-  { title: 'RA', value: 'academicRecord' },
+  { title: 'Registro Acadêmico', value: 'academicRecord' },
   { title: 'CPF', value: 'cpf' },
   { title: 'Email', value: 'email' },
   { title: 'Ações', value: 'actions', sortable: false, align: 'center' },

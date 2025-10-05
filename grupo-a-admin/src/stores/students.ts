@@ -69,6 +69,19 @@ export const useStudentsStore = defineStore('students', {
         throw error
       }
     },
+    async update(id: string, payload: Partial<Pick<Student, 'name' | 'email'>>) {
+      console.debug('[studentsStore] updating student', { id, payload })
+      try {
+        const { data } = await http.patch<Student>(`/admin/students/${id}`, payload)
+        console.debug('[studentsStore] update success', data)
+        this.current = data
+        await this.fetch(this.page, this.limit)
+        return data
+      } catch (error) {
+        console.error('[studentsStore] update error', error)
+        throw error
+      }
+    },
     async remove(id: string) {
       console.debug('[studentsStore] deleting student', { id })
       try {

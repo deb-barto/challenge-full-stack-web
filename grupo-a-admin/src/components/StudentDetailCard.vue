@@ -4,6 +4,22 @@ import type { Student } from '../types/students'
 
 const props = defineProps<{
   student: Student
+  editing: boolean
+  editName: string
+  editEmail: string
+  nameError: string | null
+  emailError: string | null
+  nameTouched: boolean
+  emailTouched: boolean
+  disabled?: boolean
+}>()
+
+const emit = defineEmits<{
+  (event: 'toggle-edit'): void
+  (event: 'update:name', value: string): void
+  (event: 'update:email', value: string): void
+  (event: 'blur-name'): void
+  (event: 'blur-email'): void
 }>()
 
 const formattedCpf = computed(() => {
@@ -22,9 +38,31 @@ const courseNames = computed(() => props.student.enrollments.map((enrollment) =>
     <v-card-title class="student-detail-card__title">
       <v-icon icon="mdi-account-school" size="32" class="student-detail-card__icon" />
       <div class="student-detail-card__heading">
-        <span class="student-detail-card__name">{{ student.name }}</span>
+        <span v-if="!editing" class="student-detail-card__name">{{ student.name }}</span>
+        <v-text-field
+          v-else
+          :model-value="editName"
+          label="Nome"
+          variant="underlined"
+          density="comfortable"
+          class="student-detail-card__name-input"
+          :error="nameTouched && !!nameError"
+          :error-messages="nameTouched && nameError ? [nameError] : []"
+          :disabled="disabled"
+          @update:model-value="(value) => emit('update:name', value)"
+          @blur="emit('blur-name')"
+        />
         <span class="student-detail-card__record">{{ student.academicRecord }}</span>
       </div>
+      <v-btn
+        variant="text"
+        class="student-detail-card__edit-btn"
+        color="primary"
+        @click="emit('toggle-edit')"
+      >
+        <v-icon :icon="editing ? 'mdi-pencil-off' : 'mdi-pencil'" start />
+        {{ editing ? 'Cancelar edição' : 'Editar' }}
+      </v-btn>
     </v-card-title>
 
     <v-divider class="student-detail-card__divider" />
@@ -37,7 +75,22 @@ const courseNames = computed(() => props.student.enrollments.map((enrollment) =>
         </div>
         <div class="student-detail-card__item">
           <span class="student-detail-card__label">Email</span>
-          <span class="student-detail-card__value">{{ student.email || '—' }}</span>
+          <template v-if="!editing">
+            <span class="student-detail-card__value">{{ student.email || '—' }}</span>
+          </template>
+          <template v-else>
+            <v-text-field
+              :model-value="editEmail"
+              variant="outlined"
+              density="comfortable"
+              class="student-detail-card__input"
+              :error="emailTouched && !!emailError"
+              :error-messages="emailTouched && emailError ? [emailError] : []"
+              :disabled="disabled"
+              @update:model-value="(value) => emit('update:email', value)"
+              @blur="emit('blur-email')"
+            />
+          </template>
         </div>
       </div>
 
@@ -79,7 +132,8 @@ const courseNames = computed(() => props.student.enrollments.map((enrollment) =>
   overflow: hidden;
   &__title {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    justify-content: space-between;
     gap: 1rem;
     padding: 1.75rem 2rem 1.25rem;
   }
@@ -104,6 +158,21 @@ const courseNames = computed(() => props.student.enrollments.map((enrollment) =>
     font-size: 0.85rem;
     letter-spacing: 0.12em;
     color: #457b9d;
+  }
+
+  &__edit-btn {
+    margin-left: auto;
+    text-transform: none;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+
+  &__name-input {
+    width: 100%;
+
+    :deep(.v-field__outline) {
+      border-radius: 0;
+    }
   }
 
   &__divider {
