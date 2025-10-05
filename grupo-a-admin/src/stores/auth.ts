@@ -1,24 +1,18 @@
 import { defineStore } from 'pinia'
-
-type AdminProfile = {
-  id: string
-  username: string
-  email: string
-  createdAt: string
-}
-
-type Session = {
-  access: string
-  refresh: string
-  admin: AdminProfile
-}
+import { http } from '../services/http'
+import type { LoginDTO, SessionDTO } from '../types/auth'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    session: null as Session | null,
+    session: null as SessionDTO | null,
   }),
   actions: {
-    setSession(session: Session) {
+    async login(payload: LoginDTO) {
+      const { data } = await http.post<SessionDTO>('/auth/login', payload)
+      this.setSession(data)
+      return data
+    },
+    setSession(session: SessionDTO) {
       this.session = session
       localStorage.setItem('auth', JSON.stringify(session))
     },
@@ -26,7 +20,7 @@ export const useAuthStore = defineStore('auth', {
       const raw = localStorage.getItem('auth')
       if (!raw) return
       try {
-        const session = JSON.parse(raw) as Session
+        const session = JSON.parse(raw) as SessionDTO
         this.session = session
       } catch {
         localStorage.removeItem('auth')

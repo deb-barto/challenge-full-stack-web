@@ -2,6 +2,7 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import type { LoginDTO } from '../types/auth'
 
 const form = reactive({ username: '', password: '' })
 const loading = ref(false)
@@ -18,21 +19,12 @@ async function submit() {
   error.value = null
   loading.value = true
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: form.username, password: form.password }),
-    })
-
-    if (!res.ok) {
-      throw new Error('invalid credentials')
-    }
-
-    const session = await res.json()
-    store.setSession(session)
+    const payload: LoginDTO = { username: form.username, password: form.password }
+    const session = await store.login(payload)
     router.push({ name: 'admin-home' })
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'login failed'
+    const message = err instanceof Error ? err.message : 'login failed'
+    error.value = message
   } finally {
     loading.value = false
   }
