@@ -167,6 +167,7 @@ function handleStudentCreated(student: Student) {
 
   &__main {
     flex: 1;
+    height: 100vh;
     background: #f5f6fa;
   }
 

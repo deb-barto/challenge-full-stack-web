@@ -32,6 +32,7 @@ import AdminSidebar from '../components/AdminSidebar.vue'
 
   &__main {
     flex: 1;
+    height: 100vh;
     background: linear-gradient(135deg, #f5f6fa 0%, #edf2f4 100%);
   }
 

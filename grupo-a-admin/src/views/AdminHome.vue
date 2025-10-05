@@ -27,8 +27,7 @@ if (!store.isAuthenticated) {
       <v-main class="dashboard__main">
         <v-container class="dashboard__container" fluid>
           <v-card class="dashboard__card" elevation="6">
-            <v-card-title class="dashboard__title">bem-vindo, {{ username }}</v-card-title>
-            <v-card-subtitle v-if="email" class="dashboard__subtitle">{{ email }}</v-card-subtitle>
+            <v-card-title class="dashboard__title">Bem-vindo, {{ username }}</v-card-title>
             <v-card-text class="dashboard__content">
               <v-img
                 class="dashboard__image"
@@ -47,8 +46,7 @@ if (!store.isAuthenticated) {
 <style scoped lang="scss">
 .dashboard {
   display: flex;
-  min-height: calc(100vh - 64px);
-
+  height: 100vh;
   &__main {
     flex: 1;
     background: #f5f6fa;
