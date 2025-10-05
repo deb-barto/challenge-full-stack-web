@@ -20,7 +20,7 @@ async function submit() {
   loading.value = true
   try {
     const payload: LoginDTO = { username: form.username, password: form.password }
-    const session = await store.login(payload)
+    await store.login(payload)
     router.push({ name: 'admin-home' })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'login failed'
@@ -32,20 +32,161 @@ async function submit() {
 </script>
 
 <template>
-  <main>
-    <h1>admin login</h1>
-    <form @submit.prevent="submit">
-      <label>
-        username
-        <input v-model="form.username" type="text" autocomplete="username" required />
-      </label>
-      <label>
-        password
-        <input v-model="form.password" type="password" autocomplete="current-password" required />
-      </label>
-      <button type="submit" :disabled="loading">login</button>
-    </form>
-    <p v-if="error" style="color: red">{{ error }}</p>
-  </main>
+  <v-app>
+    <v-main class="login">
+      <section class="login__panel">
+        <header class="login__header">
+          <v-icon icon="mdi-shield-account" class="login__icon" />
+          <h1 class="login__title">admin area</h1>
+          <p class="login__subtitle">entre com suas credenciais para continuar</p>
+        </header>
+
+        <v-form class="login__form" @submit.prevent="submit">
+          <v-text-field
+            v-model="form.username"
+            label="usuário"
+            prepend-inner-icon="mdi-account"
+            variant="outlined"
+            :disabled="loading"
+            density="comfortable"
+            class="login__field login__field--username"
+            autocomplete="username"
+            required
+          />
+
+          <v-text-field
+            v-model="form.password"
+            label="senha"
+            prepend-inner-icon="mdi-lock"
+            type="password"
+            variant="outlined"
+            :disabled="loading"
+            density="comfortable"
+            class="login__field login__field--password"
+            autocomplete="current-password"
+            required
+          />
+
+          <v-btn
+            type="submit"
+            color="primary"
+            size="large"
+            class="login__submit"
+            :loading="loading"
+            block
+          >
+            entrar
+          </v-btn>
+        </v-form>
+
+        <v-alert
+          v-if="error"
+          type="error"
+          variant="tonal"
+          class="login__alert"
+          border="start"
+        >
+          {{ error }}
+        </v-alert>
+      </section>
+    </v-main>
+  </v-app>
 </template>
+
+<style scoped lang="scss">
+.login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1d3557, #457b9d);
+
+  &__panel {
+    width: min(440px, 92vw);
+    padding: 2.5rem;
+    border-radius: 24px;
+    background-color: #ffffff;
+    box-shadow:
+      0 30px 60px rgba(13, 39, 80, 0.28),
+      0 18px 28px rgba(13, 39, 80, 0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+  }
+
+  &__header {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__icon {
+    font-size: 3.5rem;
+    color: #1d3557;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1d3557;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &__subtitle {
+    margin: 0;
+    font-size: 0.95rem;
+    color: rgba(29, 53, 87, 0.68);
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+
+  &__field {
+    &--username,
+    &--password {
+      :deep(.v-field__outline) {
+        border-radius: 16px;
+      }
+    }
+  }
+
+  &__submit {
+    border-radius: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    box-shadow: 0 18px 30px rgba(69, 123, 157, 0.35);
+  }
+
+  &__alert {
+    border-radius: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .login {
+    padding: 2rem 1rem;
+
+    &__panel {
+      padding: 2rem 1.5rem;
+      border-radius: 20px;
+    }
+
+    &__title {
+      font-size: 1.5rem;
+    }
+
+    &__subtitle {
+      font-size: 0.85rem;
+    }
+  }
+}
+</style>
 
