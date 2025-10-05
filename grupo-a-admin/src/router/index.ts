@@ -1,6 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import AdminHome from '../views/AdminHome.vue'
+import StudentsView from '../views/StudentsView.vue'
+import StudentDetailView from '../views/StudentDetailView.vue'
+import CoursesView from '../views/CoursesView.vue'
+import FinanceView from '../views/FinanceView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -8,6 +12,10 @@ const router = createRouter({
   routes: [
     { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
     { path: '/', name: 'admin-home', component: AdminHome },
+    { path: '/students', name: 'students', component: StudentsView },
+    { path: '/students/:id', name: 'student-detail', component: StudentDetailView, props: true },
+    { path: '/courses', name: 'courses', component: CoursesView },
+    { path: '/finance', name: 'finance', component: FinanceView },
   ],
 })
 

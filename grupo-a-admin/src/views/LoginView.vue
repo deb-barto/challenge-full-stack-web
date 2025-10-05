@@ -37,8 +37,8 @@ async function submit() {
       <section class="login__panel">
         <header class="login__header">
           <v-icon icon="mdi-shield-account" class="login__icon" />
-          <h1 class="login__title">admin area</h1>
-          <p class="login__subtitle">entre com suas credenciais para continuar</p>
+          <h1 class="login__title">Admin area</h1>
+          <p class="login__subtitle">Entre com suas credenciais para continuar</p>
         </header>
 
         <v-form class="login__form" @submit.prevent="submit">
@@ -99,7 +99,7 @@ async function submit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1d3557, #457b9d);
+  background: linear-gradient(135deg,rgb(78, 146, 242), #5f459d);
 
   &__panel {
     width: min(440px, 92vw);
@@ -124,7 +124,7 @@ async function submit() {
 
   &__icon {
     font-size: 3.5rem;
-    color: #1d3557;
+    color: #451e74;
   }
 
   &__title {
@@ -132,7 +132,6 @@ async function submit() {
     font-size: 1.75rem;
     font-weight: 700;
     color: #1d3557;
-    text-transform: uppercase;
     letter-spacing: 0.06em;
   }
 
@@ -160,7 +159,6 @@ async function submit() {
   &__submit {
     border-radius: 16px;
     font-weight: 600;
-    text-transform: uppercase;
     letter-spacing: 0.08em;
     box-shadow: 0 18px 30px rgba(69, 123, 157, 0.35);
   }

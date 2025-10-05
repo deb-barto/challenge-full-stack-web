@@ -49,7 +49,8 @@ export async function buildApp() {
   // rotas
   await app.register((await import('./modules/auth/auth.routes')).default);
   await app.register((await import('./modules/admin/admin.routes')).default);
-  await app.register((await import('./modules/alunos/alunos.routes')).default);
+  await app.register((await import('./modules/students/students.routes')).default);
+  await app.register((await import('./modules/courses/courses.routes')).default);
 
   return app;
 }

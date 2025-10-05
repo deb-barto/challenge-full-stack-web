@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { check } from '../../utils/password';
 
 export async function doLogin(app: FastifyInstance, username: string, password: string){
-  const admin = await app.prisma.admin.findUnique({ where: { username }});
+  const admin = await app.prisma.admin.findUnique({ where: { username } });
   if (!admin) return null;
   const ok = await check(admin.password, password);
   if (!ok) return null;

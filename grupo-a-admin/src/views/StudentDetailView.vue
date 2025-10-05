@@ -1,0 +1,215 @@
+<script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { isAxiosError } from 'axios'
+import AdminHeader from '../components/AdminHeader.vue'
+import AdminSidebar from '../components/AdminSidebar.vue'
+import StudentDetailCard from '../components/StudentDetailCard.vue'
+import StudentDeleteConfirmModal from '../components/StudentDeleteConfirmModal.vue'
+import { useStudentsStore } from '../stores/students'
+
+const router = useRouter()
+const route = useRoute()
+const store = useStudentsStore()
+
+const deleting = ref(false)
+const confirmDialog = ref(false)
+const errorMessage = ref<string | null>(null)
+
+const studentId = computed(() => route.params.id as string)
+
+const student = computed(() => store.current)
+
+async function loadStudent(id: string) {
+  errorMessage.value = null
+  try {
+    await store.fetchById(id)
+  } catch (error) {
+    const message = isAxiosError(error)
+      ? error.response?.data?.message ?? error.message
+      : error instanceof Error
+        ? error.message
+        : 'ocorreu um erro inesperado'
+    errorMessage.value = message
+  }
+}
+
+onMounted(() => {
+  loadStudent(studentId.value)
+})
+
+watch(studentId, (id) => {
+  if (id) loadStudent(id)
+})
+
+function goBack() {
+  router.push({ name: 'students' })
+}
+
+function openConfirm() {
+  confirmDialog.value = true
+}
+
+async function confirmDelete() {
+  if (!student.value) return
+  deleting.value = true
+  errorMessage.value = null
+  try {
+    await store.remove(student.value.id)
+    confirmDialog.value = false
+    goBack()
+  } catch (error) {
+    const message = isAxiosError(error)
+      ? error.response?.data?.message ?? error.message
+      : error instanceof Error
+        ? error.message
+        : 'ocorreu um erro inesperado'
+    errorMessage.value = message
+  } finally {
+    deleting.value = false
+  }
+}
+
+const isLoading = computed(() => store.loading && !student.value)
+</script>
+
+<template>
+  <v-app>
+    <AdminHeader />
+    <div class="student-detail">
+      <AdminSidebar />
+      <v-main class="student-detail__main">
+        <v-container fluid class="student-detail__container">
+          <v-btn variant="text" class="student-detail__back" @click="goBack">
+            <v-icon icon="mdi-arrow-left" start />
+            Voltar para alunos
+          </v-btn>
+
+          <v-slide-y-transition mode="out-in">
+            <v-alert
+              v-if="errorMessage"
+              key="detail-error"
+              type="error"
+              variant="tonal"
+              border="start"
+              class="student-detail__alert"
+            >
+              {{ errorMessage }}
+            </v-alert>
+          </v-slide-y-transition>
+
+          <v-skeleton-loader
+            v-if="isLoading"
+            type="card, actions"
+            class="student-detail__skeleton"
+          />
+
+          <v-fade-transition>
+            <div v-if="student" key="detail-card" class="student-detail__content">
+              <div class="student-detail__actions">
+                <v-btn
+                  color="error"
+                  variant="tonal"
+                  class="student-detail__delete"
+                  @click="openConfirm"
+                >
+                  <v-icon icon="mdi-trash-can-outline" start />
+                  Excluir aluno
+                </v-btn>
+              </div>
+              <StudentDetailCard :student="student" />
+            </div>
+          </v-fade-transition>
+        </v-container>
+      </v-main>
+    </div>
+
+    <StudentDeleteConfirmModal
+      v-model="confirmDialog"
+      :student-name="student?.name ?? ''"
+      :loading="deleting"
+      @confirm="confirmDelete"
+    />
+  </v-app>
+</template>
+
+<style scoped lang="scss">
+.student-detail {
+  display: flex;
+  min-height: calc(100vh - 64px);
+
+  &__main {
+    flex: 1;
+    background: linear-gradient(135deg, #f5f6fa 0%, #edf2f4 100%);
+  }
+
+  &__container {
+    padding: 2.5rem;
+  }
+
+  &__back {
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    color: #68459d;
+    margin-bottom: 1.5rem;
+    text-transform: none;
+  }
+
+  &__alert {
+    margin-bottom: 1.5rem;
+  }
+
+  &__skeleton {
+    border-radius: 24px;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    animation: fade-in 0.4s ease;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  &__delete {
+    letter-spacing: 0.08em;
+    font-weight: 500;
+    text-transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 960px) {
+  .student-detail {
+    flex-direction: column;
+
+    &__container {
+      padding: 1.5rem;
+    }
+
+    &__actions {
+      justify-content: center;
+    }
+
+    &__delete {
+      width: 100%;
+    }
+  }
+}
+</style>
+
+
