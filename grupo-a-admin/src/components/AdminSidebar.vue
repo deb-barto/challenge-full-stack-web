@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
+import { useDisplay } from 'vuetify'
 
 type Item = {
   label: string
@@ -9,29 +10,41 @@ type Item = {
 }
 
 const drawer = ref(true)
-const items: Item[] = [
+const display = useDisplay()
+const isMobile = computed(() => display.smAndDown.value)
+const items = [
   { label: 'Início', icon: 'mdi-home-analytics', value: 'admin-home' },
   { label: 'Alunos', icon: 'mdi-account-multiple', value: 'students' },
   { label: 'Cursos', icon: 'mdi-book-open-variant', value: 'courses' },
   { label: 'Financeiro', icon: 'mdi-cash-multiple', value: 'finance' },
-] as const
+] satisfies readonly Item[]
 
 const router = useRouter()
-const active = ref(router.currentRoute.value.name?.toString() ?? items[0].value)
-
+const fallbackRoute = items[0]?.value ?? 'admin-home'
+const active = ref(router.currentRoute.value.name?.toString() ?? fallbackRoute)
 function select(item: Item) {
   active.value = item.value
   router.push({ name: item.value })
+  if (isMobile.value) {
+    drawer.value = false
+  }
 }
+
+watchEffect(() => {
+  if (!isMobile.value) {
+    drawer.value = true
+  }
+})
 </script>
 
 <template>
   <v-navigation-drawer
     v-model="drawer"
     class="admin-sidebar"
-    :rail="false"
-    expand-on-hover
-    width="260"
+    :permanent="!isMobile"
+    :temporary="isMobile"
+    :mobile-breakpoint="600"
+    width="190"
     elevation="8"
   >
     <v-slide-y-transition mode="out-in">
