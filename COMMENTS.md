@@ -16,7 +16,7 @@ As instruções abaixo assumem que Docker e Docker Compose v2 (ou superior) est�
 2. **Subir a API e o banco via Docker Compose**
    ```sh
    docker compose build api
-   docker compose ul -d
+   docker compose up api
    ```
    O compose inicia PostgreSQL, aplica migrações Prisma e publica a API em `http://localhost:3001` quando os logs indicarem `Server listening`.
 
