@@ -29,6 +29,8 @@ As instruções abaixo assumem que Docker e Docker Compose v2 (ou superior) est�
    npm run dev 
    ```
 3. A interface estará em `http://localhost:5173`.
+4. Use o user admin e senha admin123
+
 
 ## Tecnologias principais do frontend
 
